@@ -8,10 +8,19 @@ To write a program to implement the Decision Tree Classifier Model for Predictin
 2. Anaconda – Python 3.7 Installation / Jupyter notebook
 
 ## Algorithm
-1. Collect and preprocess employee data such as salary, department, satisfaction level, and work hours.
-2. Split the dataset into training and testing sets for model development.
-3. Train the Decision Tree Classifier to learn patterns related to employee churn.
-4. Test the model with new employee data and predict whether the employee will stay or leave the company.
+
+1.Read the Employee.csv dataset and check its structure and missing values.
+
+2.Convert the categorical salary column into numeric values using LabelEncoder.
+
+3.Select important features like satisfaction_level, number_project, salary, etc., as input (X) and take left as output (Y).
+
+4.Split the dataset into training (80%) and testing (20%) sets.
+
+5.Train a Decision Tree classifier using entropy as the splitting criterion.
+
+6.Predict employee attrition on test data and calculate the model accuracy.
+
 ## Program:
 ```
 Program to implement the Decision Tree Classifier Model for Predicting Employee Churn.
@@ -20,42 +29,60 @@ RegisterNumber:  212224230222
 ```
 ```
 import pandas as pd
-import numpy as np
-
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-df = pd.read_csv("C:/Users/acer/Downloads/Employee.csv")
-df.head()
-df.info()
-df.isnull().sum()
-df.rename(columns={'Departments ': 'Department'}, inplace=True)
-df = pd.get_dummies(df, columns=['Department', 'salary'], drop_first=True)
-df.head()
-X = df.drop('left', axis=1)  
-y = df['left']  
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
-dt_model = DecisionTreeClassifier(
-    criterion='gini',
-    max_depth=5,
-    random_state=42
-)
-dt_model.fit(X_train, y_train)
-y_pred = dt_model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-print("Accuracy:", accuracy)
-confusion_matrix(y_test, y_pred)
-print(classification_report(y_test, y_pred))
-from sklearn.tree import plot_tree
 import matplotlib.pyplot as plt
 
-plt.figure(figsize=(20,10))
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+
+data = pd.read_csv("Employee.csv")
+
+data.head()
+data.info()
+data.isnull().sum()
+data["left"].value_counts()
+
+le = LabelEncoder()
+data["salary"] = le.fit_transform(data["salary"])
+
+data.head()
+
+x = data[[
+    "satisfaction_level",
+    "last_evaluation",
+    "number_project",
+    "average_montly_hours",
+    "time_spend_company",
+    "Work_accident",
+    "promotion_last_5years",
+    "salary"
+]]
+
+x.head()
+
+y = data["left"]
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=100
+)
+
+dt = DecisionTreeClassifier(criterion="entropy")
+
+dt.fit(x_train, y_train)
+
+y_pred = dt.predict(x_test)
+
+accuracy = metrics.accuracy_score(y_test, y_pred)
+accuracy
+
+dt.predict([[0.5, 0.8, 9, 260, 6, 0, 1, 2]])
+
+plt.figure(figsize=(8, 6))
 plot_tree(
-    dt_model,
-    feature_names=X.columns,
-    class_names=['Stayed', 'Left'],
+    dt,
+    feature_names=x.columns,
+    class_names=["stayed", "left"],
     filled=True
 )
 plt.show()
